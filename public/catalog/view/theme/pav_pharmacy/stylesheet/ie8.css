@@ -1,0 +1,6 @@
+.pav-megamenu .navbar-default .navbar-nav > .dropdown > a .caret:before {
+	top: -10px;
+}
+.panelbutton{
+	border: 1px solid #ddd;
+}

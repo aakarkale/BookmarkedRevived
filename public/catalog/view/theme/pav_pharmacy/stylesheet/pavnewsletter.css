@@ -1,0 +1,83 @@
+/**
+ * Web Application Prefix Apply For Making Owner Styles
+ */
+/**
+ *   Blocks Layout Selectors 
+ */
+/**
+ * Product Item Selectors
+ */
+/***********************************************************************/
+/* $font-family-secondary :             "Open Sans" !default;
+$font-family-tertiary  :             "bebas_neue" !default;
+$font-family-senary    : 		 	 "bebas_neue" !default; */
+/* $font-family-septenary : 			 "tahoma" !default;  */
+/*  
+ * LAYOUT VARIABLES 
+ */
+/**
+* Transition-timing-function property@mixin 
+*/
+/*background RGBA
+============================================*/
+/****/
+/* RIGHT TO LEFT */
+.pav-newsletter {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 40px 30px 20px;
+}
+.pav-newsletter .box-heading {
+  margin-top: 10px;
+}
+.pav-newsletter .valid {
+  position: absolute;
+  right: 20px;
+  width: 68%;
+  z-index: 1;
+}
+.rtl .pav-newsletter .valid {
+  left: 20px;
+  right: auto;
+}
+.pav-newsletter .valid > * {
+  margin: 3px 0 0;
+}
+.pav-newsletter .content {
+  width: 100%;
+  text-align: center;
+}
+.pav-newsletter .content .wapper {
+  display: inline-block;
+}
+.pav-newsletter .content .wapper > .input-form {
+  display: inline-block;
+  position: relative;
+}
+.pav-newsletter .title {
+  font-size: 18px;
+  font-weight: 100;
+  text-transform: uppercase;
+}
+.pav-newsletter .input-form input {
+  width: 510px;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  color: #aaaaaa;
+  font-size: 11px;
+  font-family: "Raleway";
+  -webkit-border-radius: 25px;
+  -moz-border-radius: 25px;
+  -ms-border-radius: 25px;
+  -o-border-radius: 25px;
+  border-radius: 25px;
+}
+.pav-newsletter .button-submit {
+  position: absolute;
+  right: 3px;
+  top: 3px;
+}
+.rtl .pav-newsletter .button-submit {
+  left: 3px;
+  right: auto;
+}

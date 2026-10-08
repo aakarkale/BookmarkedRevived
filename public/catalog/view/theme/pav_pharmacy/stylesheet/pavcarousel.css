@@ -1,0 +1,65 @@
+/**
+ * Web Application Prefix Apply For Making Owner Styles
+ */
+/**
+ *   Blocks Layout Selectors 
+ */
+/**
+ * Product Item Selectors
+ */
+/***********************************************************************/
+/* $font-family-secondary :             "Open Sans" !default;
+$font-family-tertiary  :             "bebas_neue" !default;
+$font-family-senary    : 		 	 "bebas_neue" !default; */
+/* $font-family-septenary : 			 "tahoma" !default;  */
+/*  
+ * LAYOUT VARIABLES 
+ */
+/**
+* Transition-timing-function property@mixin 
+*/
+/*background RGBA
+============================================*/
+/****/
+/* RIGHT TO LEFT */
+.pavcarousel {
+  position: relative;
+  background: white;
+  padding: 35px 0;
+}
+.pavcarousel .item {
+  /*  padding-top: 15px; */
+}
+.pavcarousel .item-inner {
+  text-align: center;
+}
+.pavcarousel .carousel-controls {
+  top: 42%;
+  position: absolute;
+  width: 100%;
+  right: 0;
+}
+.rtl .pavcarousel .carousel-controls {
+  left: 0;
+  right: auto;
+}
+.pavcarousel .carousel-controls .carousel-control {
+  left: auto;
+}
+.pavcarousel .carousel-controls .carousel-control.left {
+  left: 18px;
+}
+.rtl .pavcarousel .carousel-controls .carousel-control.left {
+  right: 18px;
+  left: auto;
+}
+.pavcarousel .carousel-controls .carousel-control.right {
+  right: 18px;
+}
+.rtl .pavcarousel .carousel-controls .carousel-control.right {
+  left: 18px;
+  right: auto;
+}
+.pavcarousel:hover .carousel-controls {
+  display: block;
+}
