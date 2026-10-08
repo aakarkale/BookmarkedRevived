@@ -1,10 +1,10 @@
 /*
- * Static-site shim for the revived bookmarked.co.in homepage.
+ * Static-site shim for the revived bookmarked.co.in.
  *
- * The original page was rendered by OpenCart and its JavaScript called store routes
- * (index.php?route=...) for the cart, wish list, compare, search, quick view and newsletter.
- * There is no backend any more, so this file replaces those calls with a notice. It sends
- * nothing anywhere and stores nothing.
+ * The original pages were rendered by OpenCart and their JavaScript called store routes
+ * (index.php?route=...) for the cart, wish list, compare, search, reviews, PIN check and
+ * newsletter. There is no backend any more, so this file replaces those calls with a notice.
+ * It sends nothing anywhere and stores nothing.
  */
 (function ($) {
 	var MESSAGE = 'Bookmarked is being revived. Online ordering is not available yet.';
@@ -21,22 +21,38 @@
 		xhr.abort();
 	});
 
-	// Theme functions referenced by the product cards' onclick attributes.
-	window.addToCart = notice;
-	window.addToWishList = notice;
-	window.addToCompare = notice;
+	// Theme functions referenced by onclick attributes. This file loads right after jQuery, before
+	// the theme's common.js defines them, so they are replaced once the document is ready.
+	$(function () {
+		window.addToCart = notice;
+		window.addToWishList = notice;
+		window.addToCompare = notice;
+		window.prepaidpincheck = notice;
+	});
 
-	// Capture-phase listeners run before any jQuery handler bound by the theme scripts.
-	var CLICK_TARGETS = '.pav-colorbox, .button-search, .button-search-mobile, #formNewLestter button';
+	function stop(e) {
+		e.preventDefault();
+		e.stopPropagation();
+		notice();
+	}
+
+	// Capture-phase listeners run before any handler bound by the theme scripts, and stopping
+	// propagation here keeps inline onclick/onchange handlers on the target from running.
+	var CLICK_TARGETS = '.button-search, .button-search-mobile, #formNewLestter button, #button-cart, #button-review, [onclick^="prepaidpincheck"]';
 	document.addEventListener('click', function (e) {
-		if ($(e.target).closest(CLICK_TARGETS).length) {
-			e.preventDefault();
-			e.stopPropagation();
-			notice();
-		} else if ($(e.target).closest('a[data-store-link]').length && !$(e.target).closest('.dropdown-toggle').length) {
-			// Links to store pages (account, categories, products) that no longer exist.
-			e.preventDefault();
-			notice();
+		var $t = $(e.target);
+		if ($t.closest(CLICK_TARGETS).length) {
+			stop(e);
+		} else if ($t.closest('a[data-store-link]').length && !$t.closest('.dropdown-toggle').length) {
+			// Links to store pages that were never archived (or are account/cart actions).
+			stop(e);
+		}
+	}, true);
+
+	// Sort / limit dropdowns navigate to the option value; '#' means that variant was not kept.
+	document.addEventListener('change', function (e) {
+		if ($(e.target).is('select') && e.target.value === '#') {
+			stop(e);
 		}
 	}, true);
 
@@ -47,16 +63,11 @@
 			if ($(e.target).is(SEARCH_INPUTS)) {
 				e.stopPropagation();
 				if (type === 'keydown' && (e.keyCode || e.which) === 13) {
-					e.preventDefault();
-					notice();
+					stop(e);
 				}
 			}
 		}, true);
 	});
 
-	document.addEventListener('submit', function (e) {
-		e.preventDefault();
-		e.stopPropagation();
-		notice();
-	}, true);
+	document.addEventListener('submit', stop, true);
 })(jQuery);

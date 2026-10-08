@@ -1,9 +1,11 @@
 # Bookmarked Revived
 
-A static restoration of the bookmarked.co.in homepage as captured by the Wayback Machine on
-5 Feb 2016 ([snapshot](https://web.archive.org/web/20160205131635/http://bookmarked.co.in/)).
-The markup, CSS, JavaScript, fonts and images are the originals from that capture, served
-from this repository. Nothing is loaded from third parties.
+A static restoration of bookmarked.co.in, the textbook store, rebuilt from Wayback Machine
+captures. The homepage is the 5 Feb 2016 capture
+([snapshot](https://web.archive.org/web/20160205131635/http://bookmarked.co.in/)); every store
+page linked from it, directly or through other pages, uses the capture nearest to that date
+between January 2015 and June 2017. The markup, CSS, JavaScript, fonts and images are the
+archived originals, served from this repository. Nothing is loaded from third parties.
 
 ## Layout
 
@@ -11,27 +13,61 @@ from this repository. Nothing is loaded from third parties.
 | --- | --- |
 | `public/` | The deployable site. Vercel serves this directory as-is (see `vercel.json`). |
 | `source/bookmarked.co.in-20160205131635.html` | The untouched homepage HTML from the archive (`id_` raw capture). |
-| `tools/mirror.py`, `tools/retry.py` | Download every asset the page and its CSS reference from the same capture, falling back to other capture dates via the CDX index. |
-| `tools/build.py` | Turns the raw HTML plus mirrored assets into `public/`. |
+| `tools/crawl.py` | Follows store links from the homepage and fetches each archived page. |
+| `tools/mirror.py` | Downloads every same-site asset the pages and their CSS reference. |
+| `tools/build_site.py` | Transforms the pages and assets into `public/`. |
 | `tools/static-shim.js` | Replaces the store's AJAX calls with a notice (copied to `public/`). |
 
-## What changed from the 2016 page, and why
+## How pages map to URLs
+
+OpenCart addressed pages as `index.php?route=...&param=...`. Each archived page is published at
+its route followed by its identifying parameters, joined into a single path segment (nested
+paths would put a page beside a directory of the same name), for example:
+
+| Original | Static |
+| --- | --- |
+| `index.php?route=product/product&path=20&product_id=100107` | `/product-product-product_id-100107` |
+| `index.php?route=product/category&path=59&page=2` | `/product-category-path-59-page-2` |
+| `index.php?route=information/information&information_id=4` | `/information-information-information_id-4` |
+| `index.php?route=account/login` | `/account-login` |
+
+Parameters that only re-sort or re-slice a listing (`sort`, `order`, `limit`, filters) are not
+kept, and product pages are keyed by `product_id` alone, so each page exists once.
+
+## What changed from the original, and why
 
 The original was an OpenCart 1.5 store (theme "pav_pharmacy") with a PHP backend that no longer
 exists. Everything visual is unchanged; only behaviour that depended on the backend or on third
 parties was altered:
 
-- **Store actions are inert.** Add to Cart, Wish List, Compare, Quick View, search, the
-  newsletter form and links to store pages (account, categories, products) show the notice
-  "Bookmarked is being revived. Online ordering is not available yet." This text is new, not
-  from the original. No form posts anywhere and no data is collected.
-- **Trackers removed:** Google Analytics (`UA-58700825-1`), VWO Engage and Hello Bar.
-- **Hot-linked assets vendored:** Raleway and Open Sans (Google Fonts, archived copies), the
-  rupee symbol (Wikimedia, archived copy) and Font Awesome 4.0.3 fonts (from the npm package;
-  its `.eot` is byte-identical to the archived one).
-- **Zoom images:** 11 full-size product images were never archived; their zoom shows the
-  archived thumbnail instead.
+- **Store actions are inert.** Add to Cart, Wish List, Compare, search, reviews, the PIN-code
+  check, every form (login, register, contact, returns, newsletter) and links to pages that were
+  never archived show the notice "Bookmarked is being revived. Online ordering is not available
+  yet." This text is new, not from the original. No form posts anywhere and no data is
+  collected. Account, cart and checkout pages show their archived layout only.
+- **Listings paginate instead of scrolling infinitely.** Category, author and special-offer
+  pages loaded further pages by AJAX as you scrolled and hid their pagination bar. That needs
+  the backend, so the scroll script is removed and the theme's own pagination bar (already in
+  the markup) links to the static pages. Pages that were never archived show the notice.
+- **Sort and per-page dropdowns** on listings show the notice, because those variants are not
+  kept (see above).
+- **Third-party scripts removed:** Google Analytics (`UA-58700825-1`), VWO Engage, Hello Bar,
+  AddThis sharing buttons, Twitter, Facebook and Google+ widgets, and the Google Maps embed on
+  the contact page.
+- **Hot-linked assets vendored:** Raleway and Open Sans (Google Fonts stylesheets and fonts,
+  archived copies), the rupee symbol (Wikimedia), images that blog posts hot-linked from
+  entrepreneur.com, WordPress and Gravatar (archived copies; one with no copy shows the store
+  placeholder), and Font Awesome 4.0.3 fonts (from the npm package; its `.eot` is
+  byte-identical to the archived one).
+- **Never-archived theme files:** `tabs.js` (product page tabs) is the stock OpenCart file,
+  identical in 1.5.5.1 and 1.5.6.4; `jquery.parallax-1.1.3.js` is never called, so its script
+  tag is dropped. Captcha images were generated by the server and are blank.
+- **Images that were never archived** (about 380 product images) show another archived size of
+  the same picture when one exists, otherwise the store's own "No image available" placeholder.
 - **Outbound links** get `rel="noopener noreferrer"`.
+
+Pages captured at different dates can disagree on prices and stock; each page shows what was
+archived for it.
 
 `pavmegamenu/style.css` and `pavproducttabs.css` are empty files. That is faithful: the
 archive's content digest for both is the SHA-1 of zero bytes.
@@ -39,23 +75,39 @@ archive's content digest for both is the SHA-1 of zero bytes.
 ## Security
 
 `vercel.json` sets a Content-Security-Policy that only allows same-origin resources, blocks all
-network requests from scripts (`connect-src 'none'`), all form submissions (`form-action 'none'`)
-and framing, plus HSTS, `nosniff`, a referrer policy and a permissions policy.
-`'unsafe-inline'` is required for scripts because the theme initialises its slider and
-carousels with inline scripts placed next to their markup.
+network requests from scripts (`connect-src 'none'`) and all form submissions
+(`form-action 'none'`), and allows framing only by the site itself (Quick View opens product
+summaries in a same-site iframe). It also sets HSTS, `nosniff`, a referrer policy and a
+permissions policy. `'unsafe-inline'` is required for scripts because the theme initialises its
+sliders, carousels and tabs with inline scripts placed next to their markup. `'unsafe-eval'` is
+not allowed, which also disables the original PIN-code check (it `eval`ed server responses).
 
-The page runs the original 2016 libraries, including jQuery 1.7.1, which has published XSS
-CVEs. They are only exploitable when untrusted input reaches jQuery; this page has no user
+The pages run the original 2016 libraries, including jQuery 1.7.1, which has published XSS
+CVEs. They are only exploitable when untrusted input reaches jQuery; these pages have no user
 input that reaches the DOM, no URL parameters are read, and all AJAX is aborted. Upgrade or
 replace these libraries before adding any dynamic feature.
 
 ## Rebuilding
 
 ```sh
-python3 -I tools/mirror.py source/bookmarked.co.in-20160205131635.html work/assets
-python3 -I tools/retry.py work/mirror-report.json work/assets
-# fonts/vendor, Font Awesome woff/ttf/svg and image/vendor were added by hand; see above
-python3 -I tools/build.py source/bookmarked.co.in-20160205131635.html work/assets public
+# 1. Capture listings from the Wayback CDX index.
+CDX='https://web.archive.org/cdx/search/cdx?url=bookmarked.co.in'
+curl -o work/cdx-pages.txt   "$CDX/index.php&matchType=prefix&filter=statuscode:200&filter=mimetype:text/html&fl=timestamp,original&from=2015&to=201706"
+curl -o work/cdx-image.txt   "$CDX/image/&matchType=prefix&filter=statuscode:200&collapse=urlkey&fl=timestamp,original"
+curl -o work/cdx-catalog.txt "$CDX/catalog/&matchType=prefix&filter=statuscode:200&collapse=urlkey&fl=timestamp,original"
+# 2. Pages, then assets. Both resume where they stopped when re-run.
+python3 -I tools/crawl.py source/bookmarked.co.in-20160205131635.html work/cdx-pages.txt work/crawl
+python3 -I tools/mirror.py --cdx work/cdx-image.txt --cdx work/cdx-catalog.txt work/assets \
+    $(find work/crawl/pages -name '*.html') source/bookmarked.co.in-20160205131635.html
+# 3. Added by hand (see "What changed"): catalog/view/theme/pav_pharmacy/fonts/vendor/*,
+#    stylesheet/open-sans.css, Font Awesome woff/ttf/svg, image/vendor/*, and
+#    catalog/view/javascript/jquery/tabs.js (stock OpenCart 1.5.5.1-1.5.6.4; never archived).
+# 4. Static site, then checks.
+python3 -I tools/build_site.py source/bookmarked.co.in-20160205131635.html work/crawl work/assets public
+python3 -I tools/check_links.py public
 ```
 
-To preview locally: `python3 -m http.server -d public`.
+The archive drops many connections from this kind of environment; both fetch scripts retry and
+resume, so re-run them until they report nothing new.
+
+To preview locally, serve `public/` with clean URLs (`npx vercel dev`), since links omit `.html`.
