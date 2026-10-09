@@ -65,6 +65,8 @@ parties was altered:
 - **Images that were never archived** (about 380 product images) show another archived size of
   the same picture when one exists, otherwise the store's own "No image available" placeholder.
 - **Outbound links** get `rel="noopener noreferrer"`.
+- **Footer vendor credit removed** at the owner's request: "Powered By Cuptask.com" (and
+  "Powered By Shop2grab.com" on pages captured in 2015). The copyright line stays.
 
 Pages captured at different dates can disagree on prices and stock; each page shows what was
 archived for it.
