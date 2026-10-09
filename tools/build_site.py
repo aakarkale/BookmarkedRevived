@@ -32,7 +32,8 @@ TRACKERS = ('GoogleAnalyticsObject', '_vengage', 'vetrack', 'addthis', 'connect.
 meta = json.load(open(os.path.join(CRAWL, 'pages.json')))
 pages = {k: v for k, v in meta.items() if v['status'] == 'ok'}
 report = {'inert_links': {}, 'zoom_fallbacks': 0, 'missing_assets': set(), 'external_refs': set(),
-          'removed_scripts': {}, 'image_substitutes': {}, 'dropped_scripts': set()}
+          'removed_scripts': {}, 'image_substitutes': {}, 'dropped_scripts': set(),
+          'credits_removed': 0}
 
 
 def have(path):
@@ -195,6 +196,11 @@ def transform(html):
         return ''
     html = re.sub(r'<script[^>]*\ssrc="(/[^"]+\.js)"[^>]*>\s*</script>\n?', missing_script, html)
 
+    # Footer vendor credit ("Powered By Cuptask.com", or Shop2grab.com on 2015 captures) is
+    # removed at the owner's request; the copyright line after it stays.
+    html, n = re.subn(r'Powered By <a href="[^"]*"[^>]*>[^<]*</a>\s*<br\s*/?>\s*', '', html)
+    report['credits_removed'] += n
+
     # Forms keep their markup but post nowhere; the shim shows a notice on submit.
     html = re.sub(r'(<form\b[^>]*?)\s(?:action|method)="[^"]*"', r'\1', html)
     html = re.sub(r'(<form\b[^>]*?)\s(?:action|method)="[^"]*"', r'\1', html)
@@ -246,6 +252,7 @@ assert not clashes, clashes
 
 print(f'pages written: {len(pages)}')
 print(f'zoom fallbacks: {report["zoom_fallbacks"]}')
+print(f'footer vendor credits removed: {report["credits_removed"]}')
 subs = report['image_substitutes']
 print(f'images never archived: {len(subs)} replaced '
       f'({sum(1 for v in subs.values() if "No_image_available" in v)} by the store placeholder, the rest by another archived size)')
